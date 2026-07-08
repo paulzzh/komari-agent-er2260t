@@ -64,8 +64,8 @@ func procNetConnectionsCount(root string) (tcpCount, udpCount int, err error) {
 	}
 	defer file.Close()
 
-	tcpCount := 0
-    udpCount := 0
+	tcpCount = 0
+    udpCount = 0
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
