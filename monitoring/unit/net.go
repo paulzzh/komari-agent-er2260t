@@ -58,15 +58,25 @@ func procRoot() string {
 }
 
 func procNetConnectionsCount(root string) (tcpCount, udpCount int, err error) {
-	tcpCount, err = countProcNetFiles(root, "tcp", "tcp6")
+	file, err := os.Open("/proc/net/nf_conntrack")
 	if err != nil {
 		return 0, 0, err
 	}
-	udpCount, err = countProcNetFiles(root, "udp", "udp6")
-	if err != nil {
-		return 0, 0, err
+	defer file.Close()
+
+	tcpCount := 0
+    udpCount := 0
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		switch {
+		case strings.Contains(line, " tcp "):
+			tcpCount++
+		case strings.Contains(line, " udp "):
+			udpCount++
+		}
 	}
-	return tcpCount, udpCount, nil
+	return tcpCount, udpCount, scanner.Err()
 }
 
 func countProcNetFiles(root string, names ...string) (int, error) {
