@@ -12,52 +12,36 @@ jobs:
     if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        exclude:
-          - goos: windows
-            goarch: arm
-          - goos: darwin
-            goarch: 386
-          - goos: darwin
-            goarch: arm
-        goos: [windows, linux, darwin, freebsd]
-        goarch: [amd64, arm64, 386, arm]
+    env:
+      GOOS: linux
+      GOARCH: arm
+      CGO_ENABLED: 0
+      VERSION: ${{ github.event.release.tag_name }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
+      - name: Patch Go 1.24
+        run: |
+          mkdir -p /opt
+          (cd /opt && wget https://go.dev/dl/go1.24.13.src.tar.gz && tar xf go1.24.13.src.tar.gz)
+          cp .github/netpoll_epoll.go /opt/go/src/runtime/netpoll_epoll.go
+          (cd /opt/go/src && ./make.bash)
+          echo "/opt/go/bin" >> "$GITHUB_PATH"
 
       - name: Build binary
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: 0
-          VERSION: ${{ github.event.release.tag_name }}
         run: |
-          BINARY_NAME=komari-agent-${{ matrix.goos }}-${{ matrix.goarch }}
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            BINARY_NAME=${BINARY_NAME}.exe
-          elif [ "${{ matrix.goos }}" = "darwin" ]; then
-            # macOS binaries typically do not have a file extension
-            true
-          fi
-            go build -trimpath -ldflags="-X github.com/komari-monitor/komari-agent/update.CurrentVersion=${VERSION}" -o $BINARY_NAME
+          go build \
+            -trimpath \
+            -ldflags="-X github.com/paulzzh/komari-agent-er2260t/update.CurrentVersion=${VERSION}" \
+            -o komari-agent-linux-arm
 
       - name: Upload binary to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          BINARY_NAME=komari-agent-${{ matrix.goos }}-${{ matrix.goarch }}
-          if [ "${{ matrix.goos }}" = "windows" ]; then
-            BINARY_NAME=${BINARY_NAME}.exe
-          elif [ "${{ matrix.goos }}" = "darwin" ]; then
-            true
-          fi
-          gh release upload ${{ github.event.release.tag_name }} $BINARY_NAME --repo ${{ github.repository }}
-        shell: bash
+          gh release upload \
+            ${{ github.event.release.tag_name }} \
+            komari-agent-linux-arm \
+            --repo ${{ github.repository }}
