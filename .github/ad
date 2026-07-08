@@ -1,0 +1,6 @@
+#!/bin/sh
+
+while true; do
+/opt/komari/agent -e https://<url> -t <token> --disable-web-ssh --disable-auto-update --ignore-unsafe-cert --include-nics pe-wan_pppoe --include-mountpoint / --month-rotate 1 > komari-agent.log 2>&1
+sleep 1
+done

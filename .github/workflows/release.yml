@@ -34,7 +34,7 @@ jobs:
           export CGO_ENABLED=0
           go build \
             -trimpath \
-            -ldflags="-X github.com/paulzzh/komari-agent-er2260t/update.CurrentVersion=${VERSION}" \
+            -ldflags="-s -w -X github.com/paulzzh/komari-agent-er2260t/update.CurrentVersion=${VERSION}" \
             -o komari-agent-linux-arm
 
       - name: Upload binary to release
@@ -44,4 +44,6 @@ jobs:
           gh release upload \
             ${{ github.event.release.tag_name }} \
             komari-agent-linux-arm \
+            .github/komari-agent \
+            .github/ad \
             --repo ${{ github.repository }}
