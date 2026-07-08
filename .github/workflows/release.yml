@@ -13,9 +13,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GOOS: linux
-      GOARCH: arm
-      CGO_ENABLED: 0
       VERSION: ${{ github.event.release.tag_name }}
 
     steps:
@@ -32,6 +29,9 @@ jobs:
 
       - name: Build binary
         run: |
+          export GOOS=linux
+          export GOARCH=arm
+          export CGO_ENABLED=0
           go build \
             -trimpath \
             -ldflags="-X github.com/paulzzh/komari-agent-er2260t/update.CurrentVersion=${VERSION}" \
