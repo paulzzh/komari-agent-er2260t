@@ -1,0 +1,32 @@
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=20
+WORK=/tmp/
+
+
+start() {
+    cd ${WORK}
+    cp -f /opt/komari/net_static.json net_static.json
+    /opt/komari/ad &
+    return 0
+}
+
+stop() {
+    cd ${WORK}
+    ps -w | grep /opt/komari/ad | grep -v "grep" | awk '{print $1}' | xargs kill &>/dev/null
+    ps -w | grep /opt/komari/agent | grep -v "grep" | awk '{print $1}' | xargs kill &>/dev/null
+    mv -f net_static.json /opt/komari/net_static.json
+    return 0
+}
+
+restart() {
+    stop
+    start
+    return 0
+}
+
+reload() {
+    restart
+    return 0
+}
